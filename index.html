@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CONTAPP PERÚ — Tributación y Control de Negocio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              navy: '#071327',
+              navyLight: '#0b1930',
+              amber: '#F59E0B',
+              emerald: '#10B981',
+              rose: '#EF4444',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #eef2f6;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+
+    /* Contenedor de vista previa adaptable para Laptop / Tablet / Celular */
+    #preview-stage {
+      transition: max-width 0.32s cubic-bezier(0.4, 0, 0.2, 1), margin 0.32s ease, border-radius 0.32s ease, box-shadow 0.32s ease;
+    }
+
+    .mode-laptop {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .mode-tablet {
+      width: 100%;
+      max-width: 820px;
+      margin: 18px auto;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 6px solid #0b1930;
+      box-shadow: 0 24px 55px rgba(7, 19, 39, 0.18);
+    }
+
+    .mode-mobile {
+      width: 100%;
+      max-width: 412px;
+      margin: 18px auto;
+      border-radius: 30px;
+      overflow: hidden;
+      border: 7px solid #0b1930;
+      box-shadow: 0 24px 60px rgba(7, 19, 39, 0.22);
+    }
+
+    /* Scrollbar sutil */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Contenedor de notificaciones tipo Toast (sin alert()) -->
+  <div id="toast-stack" class="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- ===================================================================== -->
+  <!-- PANTALLA 0: IDENTIFICACIÓN DE ACTIVIDAD ECONÓMICA Y PERFIL DEL NEGOCIO -->
+  <!-- ===================================================================== -->
+  <div id="profile-modal" class="fixed inset-0 z-50 bg-[#071327]/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden my-auto">
+      <!-- Encabezado oscuro -->
+      <div class="bg-[#071327] text-white px-6 py-5 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold tracking-tight text-lg">CONTAPP</span>
+              <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">PERÚ</span>
+            </div>
+            <p class="text-xs text-slate-400">Tributación y Control de Negocio · Identificación inicial del giro</p>
+          </div>
+        </div>
+        <button id="close-profile-modal-btn" type="button" onclick="closeProfileModal()" class="hidden text-xs font-semibold text-slate-300 hover:text-white px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 cursor-pointer">
+          Cerrar
+        </button>
+      </div>
+
+      <!-- Formulario de identificación de negocio -->
+      <form id="profile-form" onsubmit="handleSaveProfile(event)" class="p-6 sm:p-8 space-y-5">
+        <div>
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">¿A qué se dedica tu empresa o actividad?</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1">
+            Identificar el giro de tu negocio permite adaptar las áreas, categorías de gasto (Art. 37° y Art. 44° LIR), ejemplos de validación SUNAT, precios y garantías.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div class="sm:col-span-2">
+            <label for="input-razon-social" class="block text-xs font-bold text-slate-700 mb-1">Razón Social o Nombre Comercial</label>
+            <input id="input-razon-social" type="text" required value="Comercial Los Andes S.A.C."
+              placeholder="Ej. Bodega El Sol E.I.R.L."
+              class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label for="input-ruc-empresa" class="block text-xs font-bold text-slate-700 mb-1">RUC (11 dígitos)</label>
+            <input id="input-ruc-empresa" type="text" required maxlength="11" pattern="\d{11}" value="20608491234"
+              placeholder="20608491234"
+              class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+        </div>
+
+        <!-- Selector de 6 actividades económicas -->
+        <div>
+          <span class="block text-xs font-bold text-slate-700 mb-2">Actividad Económica Principal</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            <label class="cursor-pointer">
+              <input type="radio" name="sector-choice" value="comercio" checked onchange="toggleCustomSectorInput(this.value)" class="peer sr-only" />
+              <div class="p-3.5 rounded-2xl border-2 border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/60 hover:border-slate-300 transition-all h-full">
+                <p class="text-xs sm:text-sm font-extrabold text-slate-900">1. Comercio / Retail</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Tiendas, bodegas, distribuidoras, ventas POS y Yape/Plin.</p>
+              </div>
+            </label>
+
+            <label class="cursor-pointer">
+              <input type="radio" name="sector-choice" value="construccion" onchange="toggleCustomSectorInput(this.value)" class="peer sr-only" />
+              <div class="p-3.5 rounded-2xl border-2 border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/60 hover:border-slate-300 transition-all h-full">
+                <p class="text-xs sm:text-sm font-extrabold text-slate-900">2. Construcción / Obra</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Obras, contratistas, materiales, equipos y valorizaciones.</p>
+              </div>
+            </label>
+
+            <label class="cursor-pointer">
+              <input type="radio" name="sector-choice" value="servicios" onchange="toggleCustomSectorInput(this.value)" class="peer sr-only" />
+              <div class="p-3.5 rounded-2xl border-2 border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/60 hover:border-slate-300 transition-all h-full">
+                <p class="text-xs sm:text-sm font-extrabold text-slate-900">3. Servicios Profesionales</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Consultoría, independientes, agencias, TI y estudios.</p>
+              </div>
+            </label>
+
+            <label class="cursor-pointer">
+              <input type="radio" name="sector-choice" value="gastronomia" onchange="toggleCustomSectorInput(this.value)" class="peer sr-only" />
+              <div class="p-3.5 rounded-2xl border-2 border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/60 hover:border-slate-300 transition-all h-full">
+                <p class="text-xs sm:text-sm font-extrabold text-slate-900">4. Gastronomía</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Restaurantes, cafeterías, insumos, salón y delivery.</p>
+              </div>
+            </label>
+
+            <label class="cursor-pointer">
+              <input type="radio" name="sector-choice" value="transporte" onchange="toggleCustomSectorInput(this.value)" class="peer sr-only" />
+              <div class="p-3.5 rounded-2xl border-2 border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/60 hover:border-slate-300 transition-all h-full">
+                <p class="text-xs sm:text-sm font-extrabold text-slate-900">5. Transporte / Logística</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Carga, reparto, combustible, mantenimiento y fletes.</p>
+              </div>
+            </label>
+
+            <label class="cursor-pointer">
+              <input type="radio" name="sector-choice" value="personalizado" onchange="toggleCustomSectorInput(this.value)" class="peer sr-only" />
+              <div class="p-3.5 rounded-2xl border-2 border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/60 hover:border-slate-300 transition-all h-full">
+                <p class="text-xs sm:text-sm font-extrabold text-slate-900">6. Giro Personalizado</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Escribe manualmente la actividad de tu negocio.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Campo opcional para Giro Personalizado -->
+        <div id="custom-sector-box" class="hidden">
+          <label for="input-custom-sector" class="block text-xs font-bold text-slate-700 mb-1">Especifica tu giro o actividad económica</label>
+          <input id="input-custom-sector" type="text" placeholder="Ej. Farmacia / Botica, Taller Automotriz o Imprenta"
+            class="w-full rounded-xl border border-amber-400 bg-amber-50/30 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+          <p class="text-xs text-slate-500">Puedes cambiar el rubro o perfil en cualquier momento desde la barra superior.</p>
+          <button type="submit"
+            class="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm shadow-xs transition-all cursor-pointer">
+            Aplicar y abrir CONTAPP →
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal auxiliar para agregar Nueva Área, Nuevo Rubro, Producto o Garantía -->
+  <div id="aux-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-[#071327]/65 backdrop-blur-2xs p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md p-6">
+      <div class="flex items-center justify-between mb-2">
+        <h3 id="aux-modal-title" class="text-base sm:text-lg font-extrabold text-slate-900">Nuevo registro</h3>
+        <button type="button" onclick="closeAuxModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer" aria-label="Cerrar ventana">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <p id="aux-modal-desc" class="text-xs sm:text-sm text-slate-500 mb-4"></p>
+      <div id="aux-modal-fields" class="space-y-3"></div>
+      <div class="mt-5 flex items-center justify-end gap-2">
+        <button type="button" onclick="closeAuxModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer">
+          Cancelar
+        </button>
+        <button type="button" id="aux-modal-save" class="px-4 py-2 rounded-xl bg-[#071327] hover:bg-[#0b1930] text-white text-xs sm:text-sm font-bold cursor-pointer">
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESCENARIO PRINCIPAL DE LA APLICACIÓN -->
+  <div id="preview-stage" class="mode-laptop bg-[#eef2f6] min-h-screen flex flex-col">
+
+    <!-- BARRA SUPERIOR (#071327) -->
+    <header class="bg-[#071327] text-white border-b border-slate-800/90 px-3 sm:px-5 py-2.5 sticky top-0 z-30">
+      <div class="flex flex-wrap items-center justify-between gap-2.5">
+        <!-- Logo + Botón Menú Móvil -->
+        <div class="flex items-center gap-2.5">
+          <button id="drawer-toggle-btn" type="button" onclick="toggleDrawer()" aria-label="Abrir menú de módulos"
+            class="lg:hidden p-2 rounded-xl bg-[#0b1930] text-slate-200 hover:text-white border border-slate-700/80 cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-extrabold tracking-tight text-sm sm:text-base text-white">CONTAPP</span>
+                <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">PERÚ</span>
+              </div>
+              <p id="top-razon-social" class="text-[11px] text-slate-400 leading-tight hidden sm:block truncate max-w-[220px]">
+                Comercial Los Andes S.A.C.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtros centrales: Cambiar rubro/perfil + Área + Periodo -->
+        <div class="flex items-center gap-2 flex-wrap order-3 sm:order-2 w-full sm:w-auto justify-center">
+          <button type="button" onclick="openProfileModal()"
+            class="inline-flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-400/40 text-xs font-bold rounded-xl px-3 py-2 transition-all cursor-pointer">
+            <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <span id="top-sector-label" class="truncate max-w-[140px]">Comercio / Retail</span>
+            <span class="text-[10px] underline opacity-85">Cambiar rubro / perfil</span>
+          </button>
+
+          <div class="relative flex-1 sm:flex-initial min-w-[155px]">
+            <select id="select-area-global" onchange="handleGlobalFilterChange()" aria-label="Filtrar por área"
+              class="w-full appearance-none bg-[#0b1930] hover:bg-slate-800 text-slate-100 text-xs sm:text-sm font-medium rounded-xl pl-3.5 pr-8 py-2 border border-slate-700/90 focus:outline-none focus:border-amber-400 cursor-pointer">
+              <option value="ALL">Todas las áreas</option>
+            </select>
+            <svg class="w-4 h-4 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+
+          <div class="relative flex-1 sm:flex-initial min-w-[138px]">
+            <select id="select-periodo-global" onchange="handleGlobalFilterChange()" aria-label="Seleccionar periodo"
+              class="w-full appearance-none bg-[#0b1930] hover:bg-slate-800 text-slate-100 text-xs sm:text-sm font-medium rounded-xl pl-3.5 pr-8 py-2 border border-slate-700/90 focus:outline-none focus:border-amber-400 cursor-pointer">
+              <option value="Noviembre 2026" selected>Noviembre 2026</option>
+              <option value="Octubre 2026">Octubre 2026</option>
+            </select>
+            <svg class="w-4 h-4 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Botones de vista previa de dispositivo: Laptop / Tablet / Celular -->
+        <div class="flex items-center bg-[#0b1930] border border-slate-700/80 rounded-full p-1 order-2 sm:order-3">
+          <button type="button" data-device="laptop" onclick="setDeviceMode('laptop')"
+            class="device-switch px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold transition-all bg-amber-500 text-slate-950 cursor-pointer">
+            Laptop
+          </button>
+          <button type="button" data-device="tablet" onclick="setDeviceMode('tablet')"
+            class="device-switch px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold transition-all text-slate-300 hover:text-white cursor-pointer">
+            Tablet
+          </button>
+          <button type="button" data-device="mobile" onclick="setDeviceMode('mobile')"
+            class="device-switch px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold transition-all text-slate-300 hover:text-white cursor-pointer">
+            Celular
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- CUERPO: SIDEBAR OSCURA + CONTENIDO PRINCIPAL -->
+    <div class="flex-1 flex relative">
+
+      <!-- Fondo oscuro al abrir drawer en móvil o modos Tablet/Celular -->
+      <div id="drawer-backdrop" onclick="toggleDrawer(false)" class="fixed inset-0 bg-slate-950/55 z-20 hidden lg:hidden"></div>
+
+      <!-- SIDEBAR IZQUIERDA (#071327 / #0b1930) -->
+      <aside id="main-sidebar"
+        class="fixed lg:static inset-y-0 left-0 z-30 w-64 bg-[#071327] text-slate-200 flex flex-col justify-between border-r border-slate-800/90 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out pt-16 lg:pt-4 pb-4 px-3 shrink-0">
+
+        <nav class="space-y-1.5" aria-label="Módulos CONTAPP">
+          <button type="button" data-module="panel" onclick="navigateTo('panel')"
+            class="mod-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-semibold transition-all bg-[#0b1930] text-white border border-slate-700/80 cursor-pointer">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0"></span>
+            <span>1. Panel General</span>
+          </button>
+
+          <button type="button" data-module="validador" onclick="navigateTo('validador')"
+            class="mod-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-medium text-slate-300 hover:bg-[#0b1930]/70 hover:text-white transition-all cursor-pointer">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
+            <span>2. Validador SUNAT</span>
+          </button>
+
+          <button type="button" data-module="simulador" onclick="navigateTo('simulador')"
+            class="mod-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-medium text-slate-300 hover:bg-[#0b1930]/70 hover:text-white transition-all cursor-pointer">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-400 shrink-0"></span>
+            <span>3. Gastos y Simulador</span>
+          </button>
+
+          <button type="button" data-module="cierre" onclick="navigateTo('cierre')"
+            class="mod-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-medium text-slate-300 hover:bg-[#0b1930]/70 hover:text-white transition-all cursor-pointer">
+            <span class="w-2.5 h-2.5 rounded-full bg-violet-400 shrink-0"></span>
+            <span>4. Cierre y CSV</span>
+          </button>
+
+          <button type="button" data-module="precios" onclick="navigateTo('precios')"
+            class="mod-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-medium text-slate-300 hover:bg-[#0b1930]/70 hover:text-white transition-all cursor-pointer">
+            <span class="w-2.5 h-2.5 rounded-full bg-orange-400 shrink-0"></span>
+            <span>5. Precios y Garantías</span>
+          </button>
+        </nav>
+
+        <!-- Badge inferior de RUC y estado SUNAT -->
+        <div class="mt-6 bg-[#0b1930] border border-slate-800 rounded-2xl p-3.5">
+          <div class="flex items-center justify-between">
+            <span id="sidebar-ruc-badge" class="text-[11px] font-bold tracking-wide text-slate-200">RUC: 20608491234</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          </div>
+          <p id="sidebar-razon-social" class="text-[11px] font-medium text-slate-300 truncate mt-1">Comercial Los Andes S.A.C.</p>
+          <p class="text-[11px] font-semibold text-emerald-400 mt-0.5">Validación preventiva SUNAT activa</p>
+          <p id="sidebar-giro-text" class="text-[10px] text-slate-400 truncate mt-1">Giro: Comercio / Retail</p>
+        </div>
+      </aside>
+
+      <!-- ÁREA PRINCIPAL DE TRABAJO -->
+      <main id="workspace-main" class="flex-1 p-4 sm:p-6 lg:p-7 max-w-full overflow-x-hidden">
+
+        <!-- =============================================================== -->
+        <!-- MÓDULO 1: PANEL GENERAL                                         -->
+        <!-- =============================================================== -->
+        <section id="view-panel" class="view-section space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                <span id="panel-badge-empresa" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                  Comercial Los Andes S.A.C. · RUC 20608491234
+                </span>
+                <span id="panel-badge-giro" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  Rubro: Comercio / Retail
+                </span>
+              </div>
+              <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                Panel General · <span id="panel-area-heading" class="text-amber-500">Todas las áreas</span>
+              </h1>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                Revisa la validez de tus facturas, boletas y cobros digitales separando Compras y Ventas antes de declarar.
+              </p>
+            </div>
+            <button type="button" onclick="navigateTo('validador')"
+              class="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 active:scale-[0.99] text-slate-950 font-extrabold text-sm px-4 py-3 rounded-xl shadow-2xs transition-all shrink-0 cursor-pointer">
+              <span>+ Validar Comprobante</span>
+            </button>
+          </div>
+
+          <!-- 4 Tarjetas KPI -->
+          <div id="panel-kpi-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500">Ventas del Periodo</span>
+                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Ventas</span>
+              </div>
+              <div id="kpi-ventas" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-2">S/ 0.00</div>
+              <p id="kpi-ventas-count" class="text-xs text-slate-400 mt-1">0 comprobantes de venta válidos</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500">Compras Deducibles</span>
+                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Compras</span>
+              </div>
+              <div id="kpi-compras" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">S/ 0.00</div>
+              <p id="kpi-compras-count" class="text-xs text-slate-400 mt-1">0 comprobantes de compra válidos</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500">Alertas SUNAT</span>
+                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Preventivo</span>
+              </div>
+              <div id="kpi-alertas" class="text-2xl sm:text-3xl font-extrabold text-amber-500 mt-2">0</div>
+              <p class="text-xs text-slate-400 mt-1">Duplicados, Yape/Plin o Art. 44° LIR</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500">IGV Neto Estimado</span>
+                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">18% Ref.</span>
+              </div>
+              <div id="kpi-igv-neto" class="text-2xl sm:text-3xl font-extrabold text-sky-600 mt-2">S/ 0.00</div>
+              <p id="kpi-igv-detalle" class="text-xs text-slate-400 mt-1">Crédito fiscal compras: S/ 0.00</p>
+            </div>
+          </div>
+
+          <!-- Bloques separados de totales: Compras vs Ventas -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-2xl border border-slate-200/90 px-5 py-4 flex items-center justify-between shadow-2xs">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-extrabold text-sm">C</span>
+                <div>
+                  <p class="text-xs font-semibold text-slate-500">Total Compras Válidas (Crédito Fiscal)</p>
+                  <p id="total-separado-compras" class="text-lg font-extrabold text-slate-900">S/ 0.00</p>
+                </div>
+              </div>
+              <button type="button" onclick="setTypeFilter('Compra')" class="text-xs font-bold text-blue-600 hover:underline cursor-pointer">
+                Filtrar compras
+              </button>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200/90 px-5 py-4 flex items-center justify-between shadow-2xs">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-extrabold text-sm">V</span>
+                <div>
+                  <p class="text-xs font-semibold text-slate-500">Total Ventas Válidas (Facturas / Cobros)</p>
+                  <p id="total-separado-ventas" class="text-lg font-extrabold text-slate-900">S/ 0.00</p>
+                </div>
+              </div>
+              <button type="button" onclick="setTypeFilter('Venta')" class="text-xs font-bold text-emerald-600 hover:underline cursor-pointer">
+                Filtrar ventas
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabla de Comprobantes del Periodo con pestañas Todos / Compras / Ventas -->
+          <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex flex-wrap items-center gap-3">
+                <h2 class="text-base sm:text-lg font-bold text-slate-900">Comprobantes del Periodo</h2>
+                <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/80" role="tablist" aria-label="Separar Compras y Ventas">
+                  <button type="button" data-type-filter="ALL" onclick="setTypeFilter('ALL')"
+                    class="type-filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-2xs cursor-pointer">
+                    Todos
+                  </button>
+                  <button type="button" data-type-filter="Compra" onclick="setTypeFilter('Compra')"
+                    class="type-filter-btn px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">
+                    Compras
+                  </button>
+                  <button type="button" data-type-filter="Venta" onclick="setTypeFilter('Venta')"
+                    class="type-filter-btn px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">
+                    Ventas
+                  </button>
+                </div>
+              </div>
+
+              <button type="button" onclick="navigateTo('simulador')" class="text-xs sm:text-sm font-bold text-sky-600 hover:text-sky-700 self-start sm:self-auto cursor-pointer">
+                Clasificar gastos →
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50/75">
+                    <th class="py-3 px-4">Tipo</th>
+                    <th class="py-3 px-4">Estado</th>
+                    <th class="py-3 px-4">Comprobante y Emisor</th>
+                    <th class="py-3 px-4">Área y Rubro</th>
+                    <th class="py-3 px-4 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="panel-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- MÓDULO 2: VALIDADOR SUNAT                                       -->
+        <!-- =============================================================== -->
+        <section id="view-validador" class="view-section hidden space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs">
+            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Validador SUNAT</h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+              Sube un PDF, XML o Foto de factura/boleta, o carga una prueba rápida para verificar RUC, IGV 18%, duplicados y causalidad antes de guardar.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <!-- Columna izquierda: Dropzone + Presets rápidos -->
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+              <label for="voucher-file-input"
+                class="block border-2 border-dashed border-slate-300 hover:border-amber-400 hover:bg-amber-50/30 rounded-2xl p-6 text-center cursor-pointer transition-all">
+                <input id="voucher-file-input" type="file" accept=".pdf,.xml,image/*" class="hidden" onchange="handleVoucherFile(event)" />
+                <div class="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 mx-auto flex items-center justify-center mb-2.5">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <p id="file-drop-title" class="text-sm font-bold text-slate-900">Subir PDF, XML o Foto de comprobante</p>
+                <p id="file-drop-sub" class="text-xs text-slate-500 mt-1">Lectura preventiva de RUC, serie, IGV 18% y causalidad</p>
+              </label>
+
+              <div class="space-y-2.5">
+                <p class="text-xs font-bold text-slate-600">
+                  Pruebas rápidas (<span id="preset-sector-tag" class="text-amber-600">Comercio / Retail</span>):
+                </p>
+
+                <button type="button" onclick="applyValidatorPreset('valido')"
+                  class="w-full text-left p-3.5 rounded-xl bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-200 transition-all cursor-pointer">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-emerald-800">✓ Comprobante válido</span>
+                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-600 text-white">Válido</span>
+                  </div>
+                  <p id="preset-valido-text" class="text-xs text-emerald-700 mt-1">Factura F004-00210 · S/ 2,360.00</p>
+                </button>
+
+                <button type="button" onclick="applyValidatorPreset('duplicado')"
+                  class="w-full text-left p-3.5 rounded-xl bg-amber-50/90 hover:bg-amber-100/80 border border-amber-200 transition-all cursor-pointer">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-amber-800">! Comprobante duplicado</span>
+                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-400 text-slate-950">Alerta</span>
+                  </div>
+                  <p id="preset-duplicado-text" class="text-xs text-amber-700 mt-1">Serie F001-00462 ya registrada en el periodo</p>
+                </button>
+
+                <button type="button" onclick="applyValidatorPreset('no_deducible')"
+                  class="w-full text-left p-3.5 rounded-xl bg-rose-50/90 hover:bg-rose-100/80 border border-rose-200 transition-all cursor-pointer">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-rose-800">✕ Gasto personal / Yape no deducible</span>
+                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-rose-600 text-white">Art. 44°</span>
+                  </div>
+                  <p class="text-xs text-rose-700 mt-1">Yape / Consumo sin causalidad de negocio</p>
+                </button>
+              </div>
+            </div>
+
+            <!-- Columna derecha: Check en vivo + Formulario editable -->
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+              <!-- Estado de validación SUNAT en vivo -->
+              <div id="sunat-check-box" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 transition-all">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <p id="sunat-check-title" class="text-sm font-extrabold text-emerald-800">✓ Válido ante SUNAT</p>
+                    <p id="sunat-check-detail" class="text-xs text-emerald-700 mt-0.5">
+                      RUC de 11 dígitos válido · IGV 18% cuadra · Sin duplicidad detectada.
+                    </p>
+                  </div>
+                  <span id="sunat-check-tag" class="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-emerald-600 text-white shrink-0">
+                    OK SUNAT
+                  </span>
+                </div>
+              </div>
+
+              <form id="validator-save-form" onsubmit="handleSaveVoucher(event)" class="space-y-4">
+                <!-- Tipo de operación: Compra o Venta -->
+                <div>
+                  <span class="block text-xs font-bold text-slate-700 mb-1.5">Tipo de operación</span>
+                  <div class="grid grid-cols-2 gap-2.5">
+                    <label class="cursor-pointer">
+                      <input type="radio" name="doc-op-type" value="Compra" checked onchange="runSunatLiveCheck()" class="peer sr-only" />
+                      <div class="p-3 rounded-xl border border-slate-200 peer-checked:border-blue-600 peer-checked:bg-blue-50/70 peer-checked:text-blue-900 text-slate-600 text-center text-xs sm:text-sm font-bold transition-all">
+                        Compra (Crédito / Gasto)
+                      </div>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="radio" name="doc-op-type" value="Venta" onchange="runSunatLiveCheck()" class="peer sr-only" />
+                      <div class="p-3 rounded-xl border border-slate-200 peer-checked:border-emerald-600 peer-checked:bg-emerald-50/70 peer-checked:text-emerald-900 text-slate-600 text-center text-xs sm:text-sm font-bold transition-all">
+                        Venta (Factura / Yape / Plin)
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label for="doc-emisor" class="block text-xs font-semibold text-slate-600 mb-1">Emisor / Cliente</label>
+                    <input id="doc-emisor" type="text" required value="DISTRIBUIDORA ANDINA S.A.C." oninput="runSunatLiveCheck()"
+                      class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+                  </div>
+                  <div>
+                    <label for="doc-ruc-emisor" class="block text-xs font-semibold text-slate-600 mb-1">RUC Emisor / Cliente (11 dígitos)</label>
+                    <input id="doc-ruc-emisor" type="text" required maxlength="11" value="20512348901" oninput="runSunatLiveCheck()"
+                      class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div>
+                    <label for="doc-serie" class="block text-xs font-semibold text-slate-600 mb-1">Serie y Número</label>
+                    <input id="doc-serie" type="text" required value="F004-00210" oninput="runSunatLiveCheck()"
+                      class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-medium text-slate-900 uppercase focus:outline-none focus:border-amber-500" />
+                  </div>
+                  <div>
+                    <label for="doc-base" class="block text-xs font-semibold text-slate-600 mb-1">Base Imponible (S/)</label>
+                    <input id="doc-base" type="number" step="0.01" min="0" required value="2000.00" oninput="syncIgvAndTotalFromBase()"
+                      class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+                  </div>
+                  <div>
+                    <label for="doc-total-igv" class="block text-xs font-semibold text-slate-600 mb-1">Total con IGV 18% (S/)</label>
+                    <input id="doc-total-igv" type="number" step="0.01" min="0" required value="2360.00" oninput="runSunatLiveCheck()"
+                      class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500" />
+                  </div>
+                </div>
+
+                <!-- Área y Rubro/Categoría con creación inline (+ Nueva área / + Nuevo rubro) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <label for="doc-area" class="text-xs font-semibold text-slate-600">Área / Sede</label>
+                      <button type="button" onclick="openAddAreaInline()" class="text-[11px] font-bold text-amber-600 hover:text-amber-700 cursor-pointer">
+                        + Nueva área
+                      </button>
+                    </div>
+                    <select id="doc-area" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-medium text-slate-900 bg-white focus:outline-none focus:border-amber-500"></select>
+                  </div>
+
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <label for="doc-rubro" class="text-xs font-semibold text-slate-600">Rubro / Categoría</label>
+                      <button type="button" onclick="openAddRubroInline()" class="text-[11px] font-bold text-amber-600 hover:text-amber-700 cursor-pointer">
+                        + Nuevo rubro
+                      </button>
+                    </div>
+                    <select id="doc-rubro" onchange="runSunatLiveCheck()" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-medium text-slate-900 bg-white focus:outline-none focus:border-amber-500"></select>
+                  </div>
+                </div>
+
+                <div class="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button type="button" onclick="runSunatLiveCheck(true)"
+                    class="w-full py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-900 text-sm font-bold transition-all cursor-pointer">
+                    Validar ahora
+                  </button>
+                  <button type="submit"
+                    class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-2xs transition-all cursor-pointer">
+                    Guardar comprobante
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- MÓDULO 3: GASTOS Y SIMULADOR                                    -->
+        <!-- =============================================================== -->
+        <section id="view-simulador" class="view-section hidden space-y-5">
+          <div class="bg-[#071327] text-white rounded-2xl p-5 sm:p-6 shadow-md space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Gastos y Simulador</h1>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1">
+                  Clasifica tus comprobantes por Área y Rubro, aíslalos si no tienen causalidad (Art. 37° / Art. 44° LIR) y revisa tu IGV al instante.
+                </p>
+              </div>
+              <span id="sim-cap-pill" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 self-start">
+                0% del tope mensual (S/ 20,000.00)
+              </span>
+            </div>
+
+            <div class="w-full h-2.5 bg-[#0b1930] rounded-full overflow-hidden border border-slate-800">
+              <div id="sim-cap-bar" class="h-full bg-amber-400 rounded-full transition-all duration-300" style="width: 0%;"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <div class="bg-[#0b1930] border border-slate-800 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium">Gasto Deducible</p>
+                <p id="sim-card-deducible" class="text-xl sm:text-2xl font-extrabold text-white mt-1">S/ 0.00</p>
+              </div>
+
+              <div class="bg-[#0b1930] border border-slate-800 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium">IGV Deducible (18%)</p>
+                <p id="sim-card-igv" class="text-xl sm:text-2xl font-extrabold text-emerald-400 mt-1">S/ 0.00</p>
+              </div>
+
+              <div class="bg-[#0b1930] border border-slate-800 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium">No Deducibles Aislados</p>
+                <p id="sim-card-nondeductible" class="text-xl sm:text-2xl font-extrabold text-rose-400 mt-1">S/ 0.00</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="sim-items-container" class="space-y-3"></div>
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- MÓDULO 4: CIERRE Y CSV                                          -->
+        <!-- =============================================================== -->
+        <section id="view-cierre" class="view-section hidden space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Cierre y CSV</h1>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                Exporta únicamente comprobantes válidos de Compras y Ventas en formato CSV UTF-8 para tu contador.
+              </p>
+            </div>
+            <button type="button" onclick="exportValidVouchersCsv()"
+              class="inline-flex items-center justify-center gap-2 bg-[#071327] hover:bg-[#0b1930] text-white font-bold text-sm px-5 py-3 rounded-xl shadow-2xs transition-all shrink-0 cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Descargar Reporte CSV</span>
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs space-y-4">
+            <div class="flex flex-wrap items-center gap-2 text-sm text-slate-700 pb-3 border-b border-slate-100">
+              <span><strong>Periodo:</strong> <span id="cierre-periodo-val">Noviembre 2026</span></span>
+              <span class="text-slate-300">·</span>
+              <span><strong>Área:</strong> <span id="cierre-area-val">Todas las áreas</span></span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Estado de Comprobantes</p>
+                <div class="flex justify-between">
+                  <span class="text-slate-600">Válidos listos para exportar:</span>
+                  <strong id="cierre-valid-count" class="text-emerald-700">0</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-600">Alertas o no deducibles excluidos:</span>
+                  <strong id="cierre-excluded-count" class="text-amber-600">0</strong>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Estimación Tributaria IGV (18%)</p>
+                <div class="flex justify-between">
+                  <span class="text-slate-600">IGV 18% crédito compras válidas:</span>
+                  <strong id="cierre-igv-compras" class="text-slate-900">S/ 0.00</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-600">IGV 18% estimado neto:</span>
+                  <strong id="cierre-igv-estimado" class="text-sky-700">S/ 0.00</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- MÓDULO 5: PRECIOS Y GARANTÍAS                                   -->
+        <!-- =============================================================== -->
+        <section id="view-precios" class="view-section hidden space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Precios y Garantías</h1>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                Monitorea variaciones de precios en tus insumos habituales y controla las fechas de vencimiento de garantías activas.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="openAddTrackedItemModal()"
+                class="px-4 py-2.5 rounded-xl bg-[#071327] hover:bg-[#0b1930] text-white text-xs sm:text-sm font-bold cursor-pointer">
+                + Nuevo insumo
+              </button>
+              <button type="button" onclick="openAddWarrantyModal()"
+                class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-extrabold cursor-pointer">
+                + Nueva garantía
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <!-- Columna 1: Insumos / Productos monitoreados -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-3">
+              <div class="flex items-center justify-between">
+                <h2 class="text-base font-bold text-slate-900">Insumos y Productos Monitoreados</h2>
+                <span class="text-xs text-slate-400">Precio unitario S/</span>
+              </div>
+              <div id="tracked-items-list" class="space-y-2.5"></div>
+            </div>
+
+            <!-- Columna 2: Garantías Activas -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-3">
+              <div class="flex items-center justify-between">
+                <h2 class="text-base font-bold text-slate-900">Garantías Activas</h2>
+                <span class="text-xs text-slate-400">Vencimiento y días</span>
+              </div>
+              <div id="warranties-list" class="space-y-2.5"></div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // CATÁLOGO POR ACTIVIDAD ECONÓMICA (GIRO DEL NEGOCIO)
+    // =========================================================================
+    const SECTOR_CATALOG = {
+      comercio: {
+        label: 'Comercio / Retail',
+        areas: ['Tienda Principal', 'Almacén Central', 'Canal Digital / Yape', 'Administración'],
+        rubros: ['Mercadería', 'Logística y Envío', 'Equipamiento POS', 'Ventas Facturadas', 'Cobros Yape / Plin', 'Personal / No deducible'],
+        presetValido: { opType: 'Compra', emisor: 'DISTRIBUIDORA ANDINA S.A.C.', ruc: '20512348901', serie: 'F004-00210', base: 2000.00, rubro: 'Mercadería', desc: 'Factura F004-00210 · S/ 2,360.00' },
+        presetDuplicado: { opType: 'Compra', emisor: 'MAYORISTA DEL SUR S.A.C.', ruc: '20370146994', serie: 'F001-00462', base: 1800.00, rubro: 'Mercadería', desc: 'Serie F001-00462 ya registrada en el periodo' },
+        vouchers: [
+          { id: 'v-c1', type: 'Compra', status: 'valid', serie: 'F004-00184', ruc: '20512348901', emisor: 'DISTRIBUIDORA ANDINA S.A.C.', date: '2026-11-18', period: 'Noviembre 2026', area: 'Tienda Principal', rubro: 'Mercadería', base: 3000.00, total: 3540.00, note: 'Compra con causalidad directa (Art. 37° LIR).' },
+          { id: 'v-c2', type: 'Venta', status: 'valid', serie: 'F001-00810', ruc: '20548791203', emisor: 'TIENDAS MIRAFLORES S.A.C.', date: '2026-11-17', period: 'Noviembre 2026', area: 'Tienda Principal', rubro: 'Ventas Facturadas', base: 4200.00, total: 4956.00, note: 'Factura electrónica emitida y validada.' },
+          { id: 'v-c3', type: 'Compra', status: 'alert', serie: 'F001-00462', ruc: '20370146994', emisor: 'MAYORISTA DEL SUR S.A.C.', date: '2026-11-19', period: 'Noviembre 2026', area: 'Almacén Central', rubro: 'Mercadería', base: 1800.00, total: 2124.00, note: 'Posible duplicado: serie F001-00462 ya registrada.' },
+          { id: 'v-c4', type: 'Compra', status: 'nondeductible', serie: 'B002-00910', ruc: '10458921341', emisor: 'RESTAURANTE EL PARRAL (YAPE)', date: '2026-11-16', period: 'Noviembre 2026', area: 'Administración', rubro: 'Personal / No deducible', base: 220.00, total: 259.60, note: 'Gasto personal / Yape sin causalidad (Art. 44° LIR).' },
+          { id: 'v-c5', type: 'Venta', status: 'alert', serie: 'YAPE-1122', ruc: '00000000000', emisor: 'COBROS YAPE / PLIN DEL DÍA', date: '2026-11-22', period: 'Noviembre 2026', area: 'Canal Digital / Yape', rubro: 'Cobros Yape / Plin', base: 600.00, total: 708.00, note: 'Ingreso digital pendiente de boleta electrónica.' }
+        ],
+        items: [
+          { id: 'it-c1', name: 'Caja Papel Térmico POS 80mm (x50)', supplier: 'Mayorista del Sur', price: 84.50, pct: 3.9 },
+          { id: 'it-c2', name: 'Bolsas Kraft Reforzadas (Millar)', supplier: 'Distribuidora Andina', price: 62.00, pct: -1.4 },
+          { id: 'it-c3', name: 'Cinta de Embalaje Transparente (Docena)', supplier: 'Logística Lima', price: 34.00, pct: 0.0 }
+        ],
+        warranties: [
+          { id: 'wr-c1', name: 'Impresora Térmica Epson TM-T20III', voucher: 'F004-00184', expires: '17/01/2027', days: 54 },
+          { id: 'wr-c2', name: 'Balanza Digital Comercial 30kg', voucher: 'F001-00810', expires: '12/12/2026', days: 18 }
+        ]
+      },
+
+      construccion: {
+        label: 'Construcción / Obra',
+        areas: ['Obra Residencial Sur', 'Ampliación Los Olivos', 'Remodelación Miraflores', 'Almacén de Obra'],
+        rubros: ['Materiales', 'Maquinaria', 'Subcontratos', 'Valorizaciones', 'Personal / No deducible'],
+        presetValido: { opType: 'Compra', emisor: 'UNACEM PERU S.A.A.', ruc: '20100137390', serie: 'F004-00210', base: 2000.00, rubro: 'Materiales', desc: 'Factura F004-00210 · S/ 2,360.00' },
+        presetDuplicado: { opType: 'Compra', emisor: 'ACEROS AREQUIPA S.A.', ruc: '20370146994', serie: 'F001-00462', base: 4200.00, rubro: 'Materiales', desc: 'Serie F001-00462 ya registrada en el periodo' },
+        vouchers: [
+          { id: 'v-o1', type: 'Compra', status: 'valid', serie: 'F004-00184', ruc: '20100137390', emisor: 'UNACEM PERU S.A.A.', date: '2026-11-18', period: 'Noviembre 2026', area: 'Obra Residencial Sur', rubro: 'Materiales', base: 3000.00, total: 3540.00, note: 'Cemento para partida de estructuras (Art. 37° LIR).' },
+          { id: 'v-o2', type: 'Venta', status: 'valid', serie: 'F001-00315', ruc: '20518943210', emisor: 'INMOBILIARIA DEL SUR S.A.C.', date: '2026-11-17', period: 'Noviembre 2026', area: 'Obra Residencial Sur', rubro: 'Valorizaciones', base: 5200.00, total: 6136.00, note: 'Valorización de obra facturada y validada.' },
+          { id: 'v-o3', type: 'Compra', status: 'alert', serie: 'F001-00462', ruc: '20370146994', emisor: 'ACEROS AREQUIPA S.A.', date: '2026-11-19', period: 'Noviembre 2026', area: 'Obra Residencial Sur', rubro: 'Materiales', base: 4200.00, total: 4956.00, note: 'Posible duplicado: serie F001-00462 ya registrada.' },
+          { id: 'v-o4', type: 'Compra', status: 'nondeductible', serie: 'B002-00910', ruc: '10458921341', emisor: 'RESTAURANTE EL PARRAL (YAPE)', date: '2026-11-16', period: 'Noviembre 2026', area: 'Ampliación Los Olivos', rubro: 'Personal / No deducible', base: 220.00, total: 259.60, note: 'Gasto personal / Yape sin causalidad de obra (Art. 44° LIR).' },
+          { id: 'v-o5', type: 'Compra', status: 'valid', serie: 'E001-00712', ruc: '20601239871', emisor: 'MAQUINARIAS DEL SUR SAC', date: '2026-11-14', period: 'Noviembre 2026', area: 'Remodelación Miraflores', rubro: 'Maquinaria', base: 1800.00, total: 2124.00, note: '' }
+        ],
+        items: [
+          { id: 'it-o1', name: 'Cemento Sol 42.5 kg', supplier: 'UNACEM', price: 26.50, pct: 3.9 },
+          { id: 'it-o2', name: 'Fierro Corrugado 1/2"', supplier: 'Aceros Arequipa', price: 43.20, pct: -1.4 },
+          { id: 'it-o3', name: 'Arena Gruesa (m³)', supplier: 'Agregados Sur', price: 68.00, pct: 0.0 }
+        ],
+        warranties: [
+          { id: 'wr-o1', name: 'Rotomartillo Bosch GBH', voucher: 'E001-00712', expires: '17/01/2027', days: 54 },
+          { id: 'wr-o2', name: 'Electrobomba Pedrollo 2HP', voucher: 'F004-00184', expires: '12/12/2026', days: 18 }
+        ]
+      },
+
+      servicios: {
+        label: 'Servicios Profesionales',
+        areas: ['Consultoría', 'Proyectos TI', 'Oficina Principal', 'Capacitación'],
+        rubros: ['Software y Licencias', 'Equipos de Cómputo', 'Servicios Subcontratados', 'Servicios Facturados', 'Personal / No deducible'],
+        presetValido: { opType: 'Compra', emisor: 'CLOUD PERÚ SOLUTIONS S.A.C.', ruc: '20547123890', serie: 'F003-00419', base: 1500.00, rubro: 'Software y Licencias', desc: 'Factura F003-00419 · S/ 1,770.00' },
+        presetDuplicado: { opType: 'Compra', emisor: 'TECNOLOGÍA CORPORATIVA S.A.C.', ruc: '20504129845', serie: 'F001-00462', base: 1800.00, rubro: 'Equipos de Cómputo', desc: 'Serie F001-00462 ya registrada en el periodo' },
+        vouchers: [
+          { id: 'v-s1', type: 'Compra', status: 'valid', serie: 'F003-00415', ruc: '20547123890', emisor: 'CLOUD PERÚ SOLUTIONS S.A.C.', date: '2026-11-15', period: 'Noviembre 2026', area: 'Proyectos TI', rubro: 'Software y Licencias', base: 2000.00, total: 2360.00, note: 'Licencia operativa necesaria para el servicio (Art. 37° LIR).' },
+          { id: 'v-s2', type: 'Venta', status: 'valid', serie: 'F001-00150', ruc: '20100047218', emisor: 'GRUPO PACÍFICO S.A.', date: '2026-11-18', period: 'Noviembre 2026', area: 'Consultoría', rubro: 'Servicios Facturados', base: 4500.00, total: 5310.00, note: 'Servicio profesional facturado ante SUNAT.' },
+          { id: 'v-s3', type: 'Compra', status: 'alert', serie: 'F001-00462', ruc: '20504129845', emisor: 'TECNOLOGÍA CORPORATIVA S.A.C.', date: '2026-11-19', period: 'Noviembre 2026', area: 'Oficina Principal', rubro: 'Equipos de Cómputo', base: 1800.00, total: 2124.00, note: 'Posible duplicado: serie F001-00462 ya registrada.' },
+          { id: 'v-s4', type: 'Compra', status: 'nondeductible', serie: 'B002-00910', ruc: '10458921341', emisor: 'RESTAURANTE EL PARRAL (YAPE)', date: '2026-11-16', period: 'Noviembre 2026', area: 'Oficina Principal', rubro: 'Personal / No deducible', base: 190.00, total: 224.20, note: 'Consumo personal sin causalidad (Art. 44° LIR).' }
+        ],
+        items: [
+          { id: 'it-s1', name: 'Licencia Cloud Corporativa (Anual)', supplier: 'Cloud Perú Solutions', price: 320.00, pct: 2.5 },
+          { id: 'it-s2', name: 'Plan Fibra Empresarial 600Mbps', supplier: 'Telecom Perú', price: 189.00, pct: 0.0 },
+          { id: 'it-s3', name: 'Resma Papel Bond A4 80g', supplier: 'Papelería Central', price: 24.50, pct: -1.6 }
+        ],
+        warranties: [
+          { id: 'wr-s1', name: 'Laptop Corporativa Lenovo ThinkPad', voucher: 'F001-00462', expires: '20/01/2027', days: 57 },
+          { id: 'wr-s2', name: 'Monitor IPS 27" Full HD', voucher: 'F003-00415', expires: '14/12/2026', days: 20 }
+        ]
+      },
+
+      gastronomia: {
+        label: 'Gastronomía',
+        areas: ['Salón Principal', 'Cocina y Producción', 'Delivery / Yape', 'Almacén Secos'],
+        rubros: ['Insumos Alimentarios', 'Envases y Empaques', 'Equipos de Cocina', 'Ventas Salón y Delivery', 'Personal / No deducible'],
+        presetValido: { opType: 'Compra', emisor: 'AGROINDUSTRIAS DEL PERÚ S.A.C.', ruc: '20491827364', serie: 'F005-00612', base: 1600.00, rubro: 'Insumos Alimentarios', desc: 'Factura F005-00612 · S/ 1,888.00' },
+        presetDuplicado: { opType: 'Compra', emisor: 'EMPAQUES LIMA S.A.C.', ruc: '20601928374', serie: 'F001-00462', base: 950.00, rubro: 'Envases y Empaques', desc: 'Serie F001-00462 ya registrada en el periodo' },
+        vouchers: [
+          { id: 'v-g1', type: 'Compra', status: 'valid', serie: 'F005-00601', ruc: '20491827364', emisor: 'AGROINDUSTRIAS DEL PERÚ S.A.C.', date: '2026-11-18', period: 'Noviembre 2026', area: 'Cocina y Producción', rubro: 'Insumos Alimentarios', base: 2400.00, total: 2832.00, note: 'Insumos directos del giro gastronómico (Art. 37° LIR).' },
+          { id: 'v-g2', type: 'Venta', status: 'valid', serie: 'F001-01285', ruc: '20519283746', emisor: 'EVENTOS CORPORATIVOS LIMA S.A.C.', date: '2026-11-17', period: 'Noviembre 2026', area: 'Salón Principal', rubro: 'Ventas Salón y Delivery', base: 3600.00, total: 4248.00, note: 'Ventas facturadas del periodo.' },
+          { id: 'v-g3', type: 'Compra', status: 'alert', serie: 'F001-00462', ruc: '20601928374', emisor: 'EMPAQUES LIMA S.A.C.', date: '2026-11-19', period: 'Noviembre 2026', area: 'Delivery / Yape', rubro: 'Envases y Empaques', base: 950.00, total: 1121.00, note: 'Posible duplicado: serie F001-00462 ya registrada.' },
+          { id: 'v-g4', type: 'Venta', status: 'alert', serie: 'YAPE-1121', ruc: '00000000000', emisor: 'COBROS YAPE / PLIN DELIVERY', date: '2026-11-21', period: 'Noviembre 2026', area: 'Delivery / Yape', rubro: 'Ventas Salón y Delivery', base: 580.00, total: 684.40, note: 'Cobros por Yape pendientes de boleta.' }
+        ],
+        items: [
+          { id: 'it-g1', name: 'Saco Arroz Superior 50 kg', supplier: 'Agroindustrias del Perú', price: 168.00, pct: 4.2 },
+          { id: 'it-g2', name: 'Aceite Vegetal Bidón 20 L', supplier: 'Distribuidora Gastronómica', price: 112.00, pct: -1.8 },
+          { id: 'it-g3', name: 'Empaque Delivery Kraft (x100)', supplier: 'Empaques Lima', price: 64.00, pct: 0.0 }
+        ],
+        warranties: [
+          { id: 'wr-g1', name: 'Congeladora Horizontal 420L', voucher: 'F005-00601', expires: '22/01/2027', days: 59 },
+          { id: 'wr-g2', name: 'Batidora Industrial 20L', voucher: 'F001-00462', expires: '11/12/2026', days: 17 }
+        ]
+      },
+
+      transporte: {
+        label: 'Transporte / Logística',
+        areas: ['Flota Principal', 'Reparto Urbano', 'Taller y Mantenimiento', 'Base Operativa'],
+        rubros: ['Combustible', 'Repuestos y Llantas', 'Peajes y Seguros', 'Fletes Facturados', 'Personal / No deducible'],
+        presetValido: { opType: 'Compra', emisor: 'ESTACIÓN PRIMAX PERÚ S.A.', ruc: '20100128218', serie: 'F008-00921', base: 2100.00, rubro: 'Combustible', desc: 'Factura F008-00921 · S/ 2,478.00' },
+        presetDuplicado: { opType: 'Compra', emisor: 'LLANTAS Y REPUESTOS SUR S.A.C.', ruc: '20512938475', serie: 'F001-00462', base: 1900.00, rubro: 'Repuestos y Llantas', desc: 'Serie F001-00462 ya registrada en el periodo' },
+        vouchers: [
+          { id: 'v-t1', type: 'Compra', status: 'valid', serie: 'F008-00910', ruc: '20100128218', emisor: 'ESTACIÓN PRIMAX PERÚ S.A.', date: '2026-11-18', period: 'Noviembre 2026', area: 'Flota Principal', rubro: 'Combustible', base: 2800.00, total: 3304.00, note: 'Combustible para unidad operativa (Art. 37° LIR).' },
+          { id: 'v-t2', type: 'Venta', status: 'valid', serie: 'F001-00535', ruc: '20100070970', emisor: 'COMERCIALIZADORA NACIONAL S.A.', date: '2026-11-17', period: 'Noviembre 2026', area: 'Reparto Urbano', rubro: 'Fletes Facturados', base: 5100.00, total: 6018.00, note: 'Servicio de flete validado ante SUNAT.' },
+          { id: 'v-t3', type: 'Compra', status: 'alert', serie: 'F001-00462', ruc: '20512938475', emisor: 'LLANTAS Y REPUESTOS SUR S.A.C.', date: '2026-11-19', period: 'Noviembre 2026', area: 'Taller y Mantenimiento', rubro: 'Repuestos y Llantas', base: 1900.00, total: 2242.00, note: 'Posible duplicado: serie F001-00462 ya registrada.' }
+        ],
+        items: [
+          { id: 'it-t1', name: 'Diésel B5 S-50 (Galón)', supplier: 'Estación Primax', price: 16.90, pct: 2.8 },
+          { id: 'it-t2', name: 'Neumático Radial Carga', supplier: 'Llantas y Repuestos Sur', price: 1180.00, pct: -1.5 },
+          { id: 'it-t3', name: 'Aceite Motor 15W-40 (Balde)', supplier: 'Lubricantes del Sur', price: 245.00, pct: 0.0 }
+        ],
+        warranties: [
+          { id: 'wr-t1', name: 'Equipo GPS + Sensor Combustible', voucher: 'F001-00462', expires: '19/01/2027', days: 56 },
+          { id: 'wr-t2', name: 'Compresora Neumática 12V', voucher: 'F008-00910', expires: '10/12/2026', days: 16 }
+        ]
+      }
+    };
+
+    // =========================================================================
+    // ESTADO EN MEMORIA DE LA APLICACIÓN
+    // =========================================================================
+    const MONTHLY_CAP = 20000.00;
+
+    const state = {
+      razonSocial: 'Comercial Los Andes S.A.C.',
+      ruc: '20608491234',
+      sectorId: 'comercio',
+      sectorLabel: 'Comercio / Retail',
+      profileConfiguredOnce: false,
+
+      activeModule: 'panel',
+      deviceMode: 'laptop',
+      selectedArea: 'ALL',
+      selectedPeriod: 'Noviembre 2026',
+      typeFilter: 'ALL', // 'ALL' | 'Compra' | 'Venta'
+
+      areas: [...SECTOR_CATALOG.comercio.areas],
+      rubros: [...SECTOR_CATALOG.comercio.rubros],
+      vouchers: JSON.parse(JSON.stringify(SECTOR_CATALOG.comercio.vouchers)),
+      items: JSON.parse(JSON.stringify(SECTOR_CATALOG.comercio.items)),
+      warranties: JSON.parse(JSON.stringify(SECTOR_CATALOG.comercio.warranties))
+    };
+
+    // =========================================================================
+    // UTILIDADES Y TOASTS
+    // =========================================================================
+    function formatPEN(num) {
+      const val = Number(num) || 0;
+      return 'S/ ' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function notify(msg, tone = 'success') {
+      const stack = document.getElementById('toast-stack');
+      const el = document.createElement('div');
+      const palette = {
+        success: 'bg-[#071327] text-white border-emerald-400',
+        warning: 'bg-amber-950 text-amber-100 border-amber-400',
+        info: 'bg-[#0b1930] text-white border-sky-400'
+      };
+      el.className = `pointer-events-auto px-4 py-3 rounded-xl border-l-4 shadow-lg text-xs sm:text-sm font-medium transition-all duration-200 ${palette[tone] || palette.success}`;
+      el.textContent = msg;
+      stack.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 220);
+      }, 3000);
+    }
+
+    // =========================================================================
+    // PERFIL DE EMPRESA Y ACTIVIDAD ECONÓMICA
+    // =========================================================================
+    function toggleCustomSectorInput(val) {
+      const box = document.getElementById('custom-sector-box');
+      const input = document.getElementById('input-custom-sector');
+      if (val === 'personalizado') {
+        box.classList.remove('hidden');
+        input.required = true;
+        input.focus();
+      } else {
+        box.classList.add('hidden');
+        input.required = false;
+      }
+    }
+
+    function openProfileModal() {
+      document.getElementById('input-razon-social').value = state.razonSocial;
+      document.getElementById('input-ruc-empresa').value = state.ruc;
+      const modal = document.getElementById('profile-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (state.profileConfiguredOnce) {
+        document.getElementById('close-profile-modal-btn').classList.remove('hidden');
+      }
+    }
+
+    function closeProfileModal() {
+      if (!state.profileConfiguredOnce) return;
+      const modal = document.getElementById('profile-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleSaveProfile(event) {
+      event.preventDefault();
+      const razon = document.getElementById('input-razon-social').value.trim() || 'Mi Empresa S.A.C.';
+      const ruc = document.getElementById('input-ruc-empresa').value.trim() || '20608491234';
+      const chosen = document.querySelector('input[name="sector-choice"]:checked')?.value || 'comercio';
+      const customGiro = document.getElementById('input-custom-sector').value.trim();
+
+      state.razonSocial = razon;
+      state.ruc = ruc;
+      state.sectorId = chosen;
+      state.selectedArea = 'ALL';
+      state.typeFilter = 'ALL';
+
+      if (chosen === 'personalizado' && customGiro) {
+        state.sectorLabel = customGiro;
+        state.areas = ['Sede Principal', 'Operaciones', 'Ventas y Cobros', 'Administración'];
+        state.rubros = ['Insumos del Giro', 'Servicios Operativos', 'Equipos y Herramientas', 'Ventas Facturadas', 'Personal / No deducible'];
+        state.vouchers = JSON.parse(JSON.stringify(SECTOR_CATALOG.comercio.vouchers)).map((v, idx) => ({
+          ...v,
+          id: 'v-p' + idx,
+          area: state.areas[idx % state.areas.length],
+          rubro: v.status === 'nondeductible' ? 'Personal / No deducible' : (v.type === 'Venta' ? 'Ventas Facturadas' : 'Insumos del Giro')
+        }));
+        state.items = JSON.parse(JSON.stringify(SECTOR_CATALOG.comercio.items));
+        state.warranties = JSON.parse(JSON.stringify(SECTOR_CATALOG.comercio.warranties));
+      } else {
+        const catalogKey = SECTOR_CATALOG[chosen] ? chosen : 'comercio';
+        const tpl = SECTOR_CATALOG[catalogKey];
+        state.sectorLabel = tpl.label;
+        state.areas = [...tpl.areas];
+        state.rubros = [...tpl.rubros];
+        state.vouchers = JSON.parse(JSON.stringify(tpl.vouchers));
+        state.items = JSON.parse(JSON.stringify(tpl.items));
+        state.warranties = JSON.parse(JSON.stringify(tpl.warranties));
+      }
+
+      state.profileConfiguredOnce = true;
+
+      // Sincronizar etiquetas de perfil y presets
+      document.getElementById('top-razon-social').textContent = state.razonSocial;
+      document.getElementById('top-sector-label').textContent = state.sectorLabel;
+      document.getElementById('sidebar-ruc-badge').textContent = `RUC: ${state.ruc}`;
+      document.getElementById('sidebar-razon-social').textContent = state.razonSocial;
+      document.getElementById('sidebar-giro-text').textContent = `Giro: ${state.sectorLabel}`;
+      document.getElementById('panel-badge-empresa').textContent = `${state.razonSocial} · RUC ${state.ruc}`;
+      document.getElementById('panel-badge-giro').textContent = `Rubro: ${state.sectorLabel}`;
+      document.getElementById('preset-sector-tag').textContent = state.sectorLabel;
+
+      const activeCatalog = SECTOR_CATALOG[state.sectorId] || SECTOR_CATALOG.comercio;
+      document.getElementById('preset-valido-text').textContent = activeCatalog.presetValido.desc;
+      document.getElementById('preset-duplicado-text').textContent = activeCatalog.presetDuplicado.desc;
+
+      populateSelectOptions();
+      applyValidatorPreset('valido', false);
+      renderWorkspace();
+
+      const modal = document.getElementById('profile-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.getElementById('close-profile-modal-btn').classList.remove('hidden');
+
+      notify(`Perfil configurado: ${state.razonSocial} (${state.sectorLabel})`, 'success');
+    }
+
+    // =========================================================================
+    // NAVEGACIÓN, MENÚ MÓVIL Y MODO DE DISPOSITIVO (LAPTOP / TABLET / CELULAR)
+    // =========================================================================
+    function navigateTo(moduleName) {
+      state.activeModule = moduleName;
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+      const activeSec = document.getElementById(`view-${moduleName}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+
+      document.querySelectorAll('.mod-nav-btn').forEach(btn => {
+        const selected = btn.getAttribute('data-module') === moduleName;
+        btn.className = selected
+          ? 'mod-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-semibold transition-all bg-[#0b1930] text-white border border-slate-700/80 cursor-pointer'
+          : 'mod-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-medium text-slate-300 hover:bg-[#0b1930]/70 hover:text-white transition-all cursor-pointer';
+      });
+
+      toggleDrawer(false);
+      renderWorkspace();
+    }
+
+    function toggleDrawer(forceOpen) {
+      const sidebar = document.getElementById('main-sidebar');
+      const backdrop = document.getElementById('drawer-backdrop');
+      const currentlyOpen = !sidebar.classList.contains('-translate-x-full');
+      const open = typeof forceOpen === 'boolean' ? forceOpen : !currentlyOpen;
+      if (open) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function setDeviceMode(mode) {
+      state.deviceMode = mode;
+      const stage = document.getElementById('preview-stage');
+      const sidebar = document.getElementById('main-sidebar');
+      const drawerBtn = document.getElementById('drawer-toggle-btn');
+      const kpiGrid = document.getElementById('panel-kpi-grid');
+
+      stage.classList.remove('mode-laptop', 'mode-tablet', 'mode-mobile');
+      stage.classList.add(`mode-${mode}`);
+
+      document.querySelectorAll('.device-switch').forEach(btn => {
+        const active = btn.getAttribute('data-device') === mode;
+        btn.className = active
+          ? 'device-switch px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold transition-all bg-amber-500 text-slate-950 cursor-pointer'
+          : 'device-switch px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold transition-all text-slate-300 hover:text-white cursor-pointer';
+      });
+
+      if (mode === 'tablet') {
+        sidebar.classList.remove('lg:static', 'lg:translate-x-0');
+        drawerBtn.classList.remove('lg:hidden');
+        kpiGrid.className = 'grid grid-cols-2 gap-3.5';
+      } else if (mode === 'mobile') {
+        sidebar.classList.remove('lg:static', 'lg:translate-x-0');
+        drawerBtn.classList.remove('lg:hidden');
+        kpiGrid.className = 'grid grid-cols-1 gap-3';
+      } else {
+        sidebar.classList.add('lg:static', 'lg:translate-x-0');
+        drawerBtn.classList.add('lg:hidden');
+        kpiGrid.className = 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4';
+      }
+    }
+
+    // =========================================================================
+    // FILTROS Y CÁLCULOS DE COMPRAS, VENTAS E IGV
+    // =========================================================================
+    function populateSelectOptions() {
+      const globalArea = document.getElementById('select-area-global');
+      const prevGlobal = globalArea.value || 'ALL';
+      globalArea.innerHTML = `<option value="ALL">Todas las áreas</option>` +
+        state.areas.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+      globalArea.value = (state.areas.includes(prevGlobal) || prevGlobal === 'ALL') ? prevGlobal : 'ALL';
+
+      const docArea = document.getElementById('doc-area');
+      const prevDocArea = docArea.value;
+      docArea.innerHTML = state.areas.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+      if (state.areas.includes(prevDocArea)) docArea.value = prevDocArea;
+
+      const docRubro = document.getElementById('doc-rubro');
+      const prevDocRubro = docRubro.value;
+      docRubro.innerHTML = state.rubros.map(r => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
+      if (state.rubros.includes(prevDocRubro)) docRubro.value = prevDocRubro;
+    }
+
+    function handleGlobalFilterChange() {
+      state.selectedArea = document.getElementById('select-area-global').value;
+      state.selectedPeriod = document.getElementById('select-periodo-global').value;
+      renderWorkspace();
+    }
+
+    function setTypeFilter(type) {
+      state.typeFilter = type;
+      document.querySelectorAll('.type-filter-btn').forEach(btn => {
+        const active = btn.getAttribute('data-type-filter') === type;
+        btn.className = active
+          ? 'type-filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-2xs cursor-pointer'
+          : 'type-filter-btn px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer';
+      });
+      renderPanelRows();
+    }
+
+    function getScopedVouchers() {
+      return state.vouchers.filter(v => {
+        const okPeriod = v.period === state.selectedPeriod;
+        const okArea = state.selectedArea === 'ALL' || v.area === state.selectedArea;
+        return okPeriod && okArea;
+      });
+    }
+
+    function computeMetrics(list) {
+      const validCompras = list.filter(v => v.type === 'Compra' && v.status === 'valid');
+      const validVentas = list.filter(v => v.type === 'Venta' && v.status === 'valid');
+      const alerts = list.filter(v => v.status === 'alert');
+      const nonDed = list.filter(v => v.status === 'nondeductible');
+
+      const comprasTotal = validCompras.reduce((s, v) => s + v.total, 0);
+      const comprasBase = validCompras.reduce((s, v) => s + v.base, 0);
+      const igvCompras = comprasTotal - comprasBase;
+
+      const ventasTotal = validVentas.reduce((s, v) => s + v.total, 0);
+      const ventasBase = validVentas.reduce((s, v) => s + v.base, 0);
+      const igvVentas = ventasTotal - ventasBase;
+
+      const noDeducibleTotal = nonDed.reduce((s, v) => s + v.total, 0);
+      const igvNeto = Math.max(0, igvVentas - igvCompras);
+
+      return {
+        validCompras,
+        validVentas,
+        validCount: validCompras.length + validVentas.length,
+        alertsAndNonDedCount: alerts.length + nonDed.length,
+        comprasTotal,
+        igvCompras,
+        ventasTotal,
+        igvVentas,
+        noDeducibleTotal,
+        igvNeto
+      };
+    }
+
+    // =========================================================================
+    // RENDERIZADO DE MÓDULOS
+    // =========================================================================
+    function renderWorkspace() {
+      const areaLabel = state.selectedArea === 'ALL' ? 'Todas las áreas' : state.selectedArea;
+      document.getElementById('panel-area-heading').textContent = areaLabel;
+
+      const scoped = getScopedVouchers();
+      const metrics = computeMetrics(scoped);
+
+      // KPIs Panel General
+      document.getElementById('kpi-ventas').textContent = formatPEN(metrics.ventasTotal);
+      document.getElementById('kpi-ventas-count').textContent = `${metrics.validVentas.length} venta(s) válida(s)`;
+
+      document.getElementById('kpi-compras').textContent = formatPEN(metrics.comprasTotal);
+      document.getElementById('kpi-compras-count').textContent = `${metrics.validCompras.length} compra(s) válida(s)`;
+
+      document.getElementById('kpi-alertas').textContent = metrics.alertsAndNonDedCount;
+
+      document.getElementById('kpi-igv-neto').textContent = formatPEN(metrics.igvNeto);
+      document.getElementById('kpi-igv-detalle').textContent = `Crédito fiscal compras: ${formatPEN(metrics.igvCompras)}`;
+
+      document.getElementById('total-separado-compras').textContent = formatPEN(metrics.comprasTotal);
+      document.getElementById('total-separado-ventas').textContent = formatPEN(metrics.ventasTotal);
+
+      renderPanelRows();
+      renderSimulator(scoped, metrics);
+      renderCloseSummary(metrics, areaLabel);
+      renderPricesAndWarranties();
+    }
+
+    function badgeStatus(status) {
+      if (status === 'valid') {
+        return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">✓ Válido</span>`;
+      }
+      if (status === 'alert') {
+        return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">! Alerta</span>`;
+      }
+      return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">✕ No deducible</span>`;
+    }
+
+    function badgeOpType(type) {
+      if (type === 'Venta') {
+        return `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">Venta</span>`;
+      }
+      return `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-100 text-blue-800 whitespace-nowrap">Compra</span>`;
+    }
+
+    function renderPanelRows() {
+      const tbody = document.getElementById('panel-table-body');
+      let rows = getScopedVouchers();
+      if (state.typeFilter !== 'ALL') {
+        rows = rows.filter(r => r.type === state.typeFilter);
+      }
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-10 px-4 text-center text-sm text-slate-400">
+              No hay comprobantes para mostrar en <strong>${escapeHtml(state.selectedPeriod)}</strong>.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr class="hover:bg-slate-50/80 transition-colors">
+          <td class="py-3.5 px-4 align-top">${badgeOpType(r.type)}</td>
+          <td class="py-3.5 px-4 align-top">${badgeStatus(r.status)}</td>
+          <td class="py-3.5 px-4 align-top">
+            <div class="font-bold text-slate-900 text-xs sm:text-sm">${escapeHtml(r.serie)} · ${escapeHtml(r.emisor)}</div>
+            <div class="text-xs text-slate-400 mt-0.5">
+              ${escapeHtml(r.date)}${r.note ? ` · <span class="${r.status === 'nondeductible' ? 'text-rose-600 font-medium' : r.status === 'alert' ? 'text-amber-700 font-medium' : 'text-slate-500'}">${escapeHtml(r.note)}</span>` : ''}
+            </div>
+          </td>
+          <td class="py-3.5 px-4 align-top">
+            <div class="font-semibold text-slate-800 text-xs sm:text-sm">${escapeHtml(r.area)}</div>
+            <div class="text-xs text-slate-400">${escapeHtml(r.rubro)}</div>
+          </td>
+          <td class="py-3.5 px-4 align-top text-right font-extrabold text-slate-900 whitespace-nowrap">
+            ${formatPEN(r.total)}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderSimulator(scoped, metrics) {
+      const pct = Math.min(100, Math.round((metrics.comprasTotal / MONTHLY_CAP) * 100));
+      document.getElementById('sim-cap-pill').textContent = `${pct}% del tope mensual (${formatPEN(MONTHLY_CAP)})`;
+      document.getElementById('sim-cap-bar').style.width = `${pct}%`;
+
+      document.getElementById('sim-card-deducible').textContent = formatPEN(metrics.comprasTotal);
+      document.getElementById('sim-card-igv').textContent = formatPEN(metrics.igvCompras);
+      document.getElementById('sim-card-nondeductible').textContent = formatPEN(metrics.noDeducibleTotal);
+
+      const container = document.getElementById('sim-items-container');
+      if (scoped.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-400">
+            No hay comprobantes en este periodo y área.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = scoped.map(v => {
+        const isValid = v.status === 'valid';
+        const areaOpts = state.areas.map(a =>
+          `<option value="${escapeHtml(a)}" ${a === v.area ? 'selected' : ''}>${escapeHtml(a)}</option>`
+        ).join('');
+        const rubroOpts = state.rubros.map(r =>
+          `<option value="${escapeHtml(r)}" ${r === v.rubro ? 'selected' : ''}>${escapeHtml(r)}</option>`
+        ).join('');
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                ${badgeOpType(v.type)}
+                ${badgeStatus(v.status)}
+                <span class="font-bold text-slate-900 text-xs sm:text-sm">${escapeHtml(v.serie)} · ${escapeHtml(v.emisor)}</span>
+              </div>
+              <span class="font-extrabold text-slate-900 text-sm sm:text-base">${formatPEN(v.total)}</span>
+            </div>
+
+            ${v.note ? `
+              <div class="px-3.5 py-2 rounded-xl text-xs font-medium ${v.status === 'nondeductible' ? 'bg-rose-50 text-rose-700 border border-rose-200/70' : v.status === 'alert' ? 'bg-amber-50 text-amber-800 border border-amber-200/70' : 'bg-slate-50 text-slate-600 border border-slate-200/70'}">
+                ${escapeHtml(v.note)}
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
+              <select onchange="mutateVoucherField('${v.id}', 'area', this.value)"
+                class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm font-medium text-slate-800 bg-white focus:outline-none focus:border-amber-500">
+                ${areaOpts}
+              </select>
+
+              <select onchange="mutateVoucherField('${v.id}', 'rubro', this.value)"
+                class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm font-medium text-slate-800 bg-white focus:outline-none focus:border-amber-500">
+                ${rubroOpts}
+              </select>
+
+              ${isValid ? `
+                <button type="button" onclick="mutateVoucherStatus('${v.id}', 'nondeductible')"
+                  class="w-full py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs sm:text-sm font-bold transition-all cursor-pointer">
+                  Marcar no deducible
+                </button>
+              ` : `
+                <button type="button" onclick="mutateVoucherStatus('${v.id}', 'valid')"
+                  class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold transition-all cursor-pointer">
+                  ✓ Validar / Subsanar
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function mutateVoucherField(id, key, value) {
+      const target = state.vouchers.find(v => v.id === id);
+      if (!target) return;
+      target[key] = value;
+      if (key === 'rubro' && value === 'Personal / No deducible') {
+        target.status = 'nondeductible';
+        target.note = 'Marcado como gasto personal sin causalidad (Art. 44° LIR).';
+      }
+      renderWorkspace();
+      notify('Clasificación actualizada en vivo.', 'info');
+    }
+
+    function mutateVoucherStatus(id, nextStatus) {
+      const target = state.vouchers.find(v => v.id === id);
+      if (!target) return;
+      target.status = nextStatus;
+      if (nextStatus === 'valid') {
+        target.note = 'Subsanado y validado para cierre tributario.';
+        if (target.rubro === 'Personal / No deducible') {
+          target.rubro = state.rubros[0] || 'Mercadería';
+        }
+        notify(`Comprobante ${target.serie} validado.`, 'success');
+      } else {
+        target.rubro = 'Personal / No deducible';
+        target.note = 'Aislado como gasto no deducible (Art. 44° LIR).';
+        notify(`Comprobante ${target.serie} marcado como no deducible.`, 'warning');
+      }
+      renderWorkspace();
+    }
+
+    function renderCloseSummary(metrics, areaLabel) {
+      document.getElementById('cierre-periodo-val').textContent = state.selectedPeriod;
+      document.getElementById('cierre-area-val').textContent = areaLabel;
+      document.getElementById('cierre-valid-count').textContent = metrics.validCount;
+      document.getElementById('cierre-excluded-count').textContent = metrics.alertsAndNonDedCount;
+      document.getElementById('cierre-igv-compras').textContent = formatPEN(metrics.igvCompras);
+      document.getElementById('cierre-igv-estimado').textContent = formatPEN(metrics.igvNeto);
+    }
+
+    function renderPricesAndWarranties() {
+      const itemsBox = document.getElementById('tracked-items-list');
+      itemsBox.innerHTML = state.items.map(it => {
+        let pctHtml = `<span class="text-xs font-bold text-slate-500">0.0% estable</span>`;
+        if (it.pct > 0) pctHtml = `<span class="text-xs font-bold text-rose-600">+${it.pct.toFixed(1)}% alza</span>`;
+        else if (it.pct < 0) pctHtml = `<span class="text-xs font-bold text-emerald-600">${it.pct.toFixed(1)}% baja</span>`;
+        return `
+          <div class="p-3.5 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-bold text-slate-900">${escapeHtml(it.name)}</p>
+              <p class="text-xs text-slate-400">${escapeHtml(it.supplier)}</p>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-sm font-extrabold text-slate-900">${formatPEN(it.price)}</p>
+              ${pctHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const warBox = document.getElementById('warranties-list');
+      warBox.innerHTML = state.warranties.map(w => {
+        const soon = w.days <= 25;
+        const badgeClass = soon
+          ? 'bg-amber-100 text-amber-800 border border-amber-200'
+          : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+        return `
+          <div class="p-3.5 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-bold text-slate-900">${escapeHtml(w.name)}</p>
+              <p class="text-xs text-slate-400">Comp. ${escapeHtml(w.voucher)} · Vence: ${escapeHtml(w.expires)}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold shrink-0 ${badgeClass}">
+              ${w.days} días
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // MÓDULO 2: VALIDADOR SUNAT (PRESETS, ARCHIVOS, CHECK EN VIVO Y GUARDADO)
+    // =========================================================================
+    function handleVoucherFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      document.getElementById('file-drop-title').textContent = `Archivo seleccionado: ${file.name}`;
+      document.getElementById('file-drop-sub').textContent = 'Datos preventivos cargados · Verifica y guarda';
+      if (file.name.toLowerCase().includes('dup')) {
+        applyValidatorPreset('duplicado', false);
+      } else {
+        applyValidatorPreset('valido', false);
+      }
+      notify(`Archivo "${file.name}" cargado en el Validador SUNAT.`, 'info');
+    }
+
+    function applyValidatorPreset(presetType, toastIt = true) {
+      const cat = SECTOR_CATALOG[state.sectorId] || SECTOR_CATALOG.comercio;
+      const setOp = (val) => {
+        document.querySelectorAll('input[name="doc-op-type"]').forEach(r => { r.checked = r.value === val; });
+      };
+
+      if (presetType === 'valido') {
+        const p = cat.presetValido;
+        setOp(p.opType);
+        document.getElementById('doc-emisor').value = p.emisor;
+        document.getElementById('doc-ruc-emisor').value = p.ruc;
+        document.getElementById('doc-serie').value = p.serie;
+        document.getElementById('doc-base').value = p.base.toFixed(2);
+        document.getElementById('doc-total-igv').value = (p.base * 1.18).toFixed(2);
+        if (state.rubros.includes(p.rubro)) document.getElementById('doc-rubro').value = p.rubro;
+      } else if (presetType === 'duplicado') {
+        const p = cat.presetDuplicado;
+        setOp(p.opType);
+        document.getElementById('doc-emisor').value = p.emisor;
+        document.getElementById('doc-ruc-emisor').value = p.ruc;
+        document.getElementById('doc-serie').value = p.serie;
+        document.getElementById('doc-base').value = p.base.toFixed(2);
+        document.getElementById('doc-total-igv').value = (p.base * 1.18).toFixed(2);
+        if (state.rubros.includes(p.rubro)) document.getElementById('doc-rubro').value = p.rubro;
+      } else {
+        setOp('Compra');
+        document.getElementById('doc-emisor').value = 'RESTAURANTE EL PARRAL (YAPE)';
+        document.getElementById('doc-ruc-emisor').value = '10458921341';
+        document.getElementById('doc-serie').value = 'B002-00988';
+        document.getElementById('doc-base').value = '150.00';
+        document.getElementById('doc-total-igv').value = '177.00';
+        if (state.rubros.includes('Personal / No deducible')) {
+          document.getElementById('doc-rubro').value = 'Personal / No deducible';
+        }
+      }
+
+      runSunatLiveCheck();
+      if (toastIt) notify('Ejemplo cargado en el Validador SUNAT.', 'info');
+    }
+
+    function syncIgvAndTotalFromBase() {
+      const base = parseFloat(document.getElementById('doc-base').value) || 0;
+      document.getElementById('doc-total-igv').value = (base * 1.18).toFixed(2);
+      runSunatLiveCheck();
+    }
+
+    function evaluateSunatCheck() {
+      const opType = document.querySelector('input[name="doc-op-type"]:checked')?.value || 'Compra';
+      const emisor = document.getElementById('doc-emisor').value.trim().toUpperCase();
+      const ruc = document.getElementById('doc-ruc-emisor').value.trim();
+      const serie = document.getElementById('doc-serie').value.trim().toUpperCase();
+      const base = parseFloat(document.getElementById('doc-base').value) || 0;
+      const total = parseFloat(document.getElementById('doc-total-igv').value) || 0;
+      const rubro = document.getElementById('doc-rubro').value;
+
+      const rucOk = /^\d{11}$/.test(ruc);
+      const expectedTotal = Number((base * 1.18).toFixed(2));
+      const igvOk = Math.abs(total - expectedTotal) <= 0.15;
+      const isDuplicate = state.vouchers.some(v => v.period === state.selectedPeriod && v.serie.toUpperCase() === serie);
+      const noCausalidad =
+        rubro === 'Personal / No deducible' ||
+        emisor.includes('YAPE') ||
+        emisor.includes('PLIN') ||
+        emisor.includes('PERSONAL');
+
+      if (!rucOk) {
+        return {
+          status: 'alert',
+          tag: 'RUC 11 dígitos',
+          title: '! Alerta SUNAT: Verifica el RUC de 11 dígitos',
+          detail: 'El RUC ingresado no cumple con los 11 dígitos numéricos requeridos para validación SUNAT.',
+          note: 'RUC con formato incompleto o inválido.'
+        };
+      }
+
+      if (!igvOk) {
+        return {
+          status: 'alert',
+          tag: 'IGV 18% difiere',
+          title: `! Alerta SUNAT: El total difiere del IGV 18% esperado (${formatPEN(expectedTotal)})`,
+          detail: 'Revisa base imponible e IGV 18% antes de declarar para evitar inconsistencias.',
+          note: `Total ${formatPEN(total)} difiere de referencia IGV 18% (${formatPEN(expectedTotal)}).`
+        };
+      }
+
+      if (isDuplicate) {
+        return {
+          status: 'alert',
+          tag: 'Duplicado',
+          title: `! Alerta SUNAT: Comprobante ${serie} duplicado en ${state.selectedPeriod}`,
+          detail: 'Ya existe un registro con esta serie y número en el periodo activo.',
+          note: `Posible duplicado: serie ${serie} ya registrada.`
+        };
+      }
+
+      if (opType === 'Compra' && noCausalidad) {
+        return {
+          status: 'nondeductible',
+          tag: 'Art. 44° LIR',
+          title: '✕ Gasto No Deducible (Sin causalidad de negocio)',
+          detail: 'Identificado como gasto personal o cobro/consumo sin causalidad (Art. 37° y Art. 44° LIR).',
+          note: 'Gasto personal / sin causalidad de negocio (Art. 44° LIR).'
+        };
+      }
+
+      return {
+        status: 'valid',
+        tag: 'OK SUNAT',
+        title: `✓ Válido ante SUNAT (${opType})`,
+        detail: `RUC ${ruc} válido · IGV 18% verificado · Comprobante ${serie} listo para guardar.`,
+        note: ''
+      };
+    }
+
+    function runSunatLiveCheck(withToast = false) {
+      const res = evaluateSunatCheck();
+      const box = document.getElementById('sunat-check-box');
+      const title = document.getElementById('sunat-check-title');
+      const detail = document.getElementById('sunat-check-detail');
+      const tag = document.getElementById('sunat-check-tag');
+
+      title.textContent = res.title;
+      detail.textContent = res.detail;
+      tag.textContent = res.tag;
+
+      if (res.status === 'valid') {
+        box.className = 'p-4 rounded-2xl bg-emerald-50 border border-emerald-200 transition-all';
+        title.className = 'text-sm font-extrabold text-emerald-800';
+        detail.className = 'text-xs text-emerald-700 mt-0.5';
+        tag.className = 'text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-emerald-600 text-white shrink-0';
+      } else if (res.status === 'alert') {
+        box.className = 'p-4 rounded-2xl bg-amber-50 border border-amber-200 transition-all';
+        title.className = 'text-sm font-extrabold text-amber-800';
+        detail.className = 'text-xs text-amber-700 mt-0.5';
+        tag.className = 'text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 shrink-0';
+      } else {
+        box.className = 'p-4 rounded-2xl bg-rose-50 border border-rose-200 transition-all';
+        title.className = 'text-sm font-extrabold text-rose-800';
+        detail.className = 'text-xs text-rose-700 mt-0.5';
+        tag.className = 'text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-rose-600 text-white shrink-0';
+      }
+
+      if (withToast) {
+        notify('Validación preventiva SUNAT actualizada.', res.status === 'valid' ? 'success' : 'warning');
+      }
+    }
+
+    function handleSaveVoucher(event) {
+      event.preventDefault();
+      const check = evaluateSunatCheck();
+      const opType = document.querySelector('input[name="doc-op-type"]:checked')?.value || 'Compra';
+      const emisor = document.getElementById('doc-emisor').value.trim().toUpperCase();
+      const ruc = document.getElementById('doc-ruc-emisor').value.trim();
+      const serie = document.getElementById('doc-serie').value.trim().toUpperCase();
+      const base = parseFloat(document.getElementById('doc-base').value) || 0;
+      const total = parseFloat(document.getElementById('doc-total-igv').value) || Number((base * 1.18).toFixed(2));
+      const area = document.getElementById('doc-area').value;
+      const rubro = document.getElementById('doc-rubro').value;
+
+      state.vouchers.unshift({
+        id: 'v-' + Date.now(),
+        type: opType,
+        status: check.status,
+        serie,
+        ruc,
+        emisor,
+        date: '2026-11-24',
+        period: state.selectedPeriod,
+        area,
+        rubro,
+        base,
+        total,
+        note: check.note
+      });
+
+      renderWorkspace();
+      navigateTo('panel');
+      notify(`Comprobante ${serie} (${opType}) guardado en ${state.selectedPeriod}.`, 'success');
+    }
+
+    // =========================================================================
+    // MODALES AUXILIARES (+ NUEVA ÁREA, + NUEVO RUBRO, + INSUMO, + GARANTÍA)
+    // =========================================================================
+    function openAuxModal({ title, desc, fields, onSave }) {
+      document.getElementById('aux-modal-title').textContent = title;
+      document.getElementById('aux-modal-desc').textContent = desc;
+      document.getElementById('aux-modal-fields').innerHTML = fields;
+      document.getElementById('aux-modal-save').onclick = () => {
+        if (onSave()) closeAuxModal();
+      };
+      const m = document.getElementById('aux-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeAuxModal() {
+      const m = document.getElementById('aux-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function openAddAreaInline() {
+      openAuxModal({
+        title: 'Agregar nueva área o sede',
+        desc: 'Crea tu propia área, sucursal o proyecto sin perder la agrupación en reportes.',
+        fields: `
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre del área</label>
+            <input id="aux-area-name" type="text" placeholder="Ej. Sucursal Callao o Taller Norte"
+              class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+        `,
+        onSave: () => {
+          const val = document.getElementById('aux-area-name').value.trim();
+          if (!val) return false;
+          if (!state.areas.includes(val)) state.areas.push(val);
+          populateSelectOptions();
+          document.getElementById('doc-area').value = val;
+          renderWorkspace();
+          notify(`Área "${val}" agregada.`, 'success');
+          return true;
+        }
+      });
+    }
+
+    function openAddRubroInline() {
+      openAuxModal({
+        title: 'Agregar nuevo rubro o categoría',
+        desc: 'Define una categoría personalizada para tus compras o ventas.',
+        fields: `
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre del rubro</label>
+            <input id="aux-rubro-name" type="text" placeholder="Ej. Insumos de Limpieza o Publicidad"
+              class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+        `,
+        onSave: () => {
+          const val = document.getElementById('aux-rubro-name').value.trim();
+          if (!val) return false;
+          if (!state.rubros.includes(val)) state.rubros.push(val);
+          populateSelectOptions();
+          document.getElementById('doc-rubro').value = val;
+          runSunatLiveCheck();
+          renderWorkspace();
+          notify(`Rubro "${val}" agregado.`, 'success');
+          return true;
+        }
+      });
+    }
+
+    function openAddTrackedItemModal() {
+      openAuxModal({
+        title: 'Agregar insumo o producto',
+        desc: 'Registra un insumo frecuente para seguir su precio unitario y variación.',
+        fields: `
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre del insumo / producto</label>
+            <input id="aux-item-name" type="text" placeholder="Ej. Caja Etiquetas Adhesivas"
+              class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Proveedor</label>
+            <input id="aux-item-sup" type="text" placeholder="Ej. Proveedor Nacional S.A.C."
+              class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Precio (S/)</label>
+              <input id="aux-item-price" type="number" step="0.01" placeholder="55.00"
+                class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-amber-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Variación (%)</label>
+              <input id="aux-item-pct" type="number" step="0.1" value="0.0"
+                class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-amber-500" />
+            </div>
+          </div>
+        `,
+        onSave: () => {
+          const name = document.getElementById('aux-item-name').value.trim();
+          const supplier = document.getElementById('aux-item-sup').value.trim() || 'Proveedor General';
+          const price = parseFloat(document.getElementById('aux-item-price').value);
+          const pct = parseFloat(document.getElementById('aux-item-pct').value) || 0;
+          if (!name || isNaN(price) || price <= 0) return false;
+          state.items.unshift({ id: 'it-' + Date.now(), name, supplier, price, pct });
+          renderPricesAndWarranties();
+          notify(`Insumo "${name}" agregado.`, 'success');
+          return true;
+        }
+      });
+    }
+
+    function openAddWarrantyModal() {
+      openAuxModal({
+        title: 'Registrar garantía activa',
+        desc: 'Guarda el vencimiento y días restantes de garantía de un equipo o activo.',
+        fields: `
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Equipo o activo</label>
+            <input id="aux-war-name" type="text" placeholder="Ej. Estabilizador de Voltaje 2000VA"
+              class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Comprobante</label>
+              <input id="aux-war-voucher" type="text" placeholder="F004-00250"
+                class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 uppercase focus:outline-none focus:border-amber-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Días restantes</label>
+              <input id="aux-war-days" type="number" min="1" value="45"
+                class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-amber-500" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha de vencimiento</label>
+            <input id="aux-war-exp" type="text" value="08/01/2027"
+              class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+        `,
+        onSave: () => {
+          const name = document.getElementById('aux-war-name').value.trim();
+          const voucher = document.getElementById('aux-war-voucher').value.trim().toUpperCase() || 'F001-00010';
+          const days = parseInt(document.getElementById('aux-war-days').value, 10) || 30;
+          const expires = document.getElementById('aux-war-exp').value.trim() || '24/12/2026';
+          if (!name) return false;
+          state.warranties.unshift({ id: 'wr-' + Date.now(), name, voucher, expires, days });
+          renderPricesAndWarranties();
+          notify(`Garantía "${name}" registrada.`, 'success');
+          return true;
+        }
+      });
+    }
+
+    // =========================================================================
+    // EXPORTACIÓN REAL DE REPORTE CSV UTF-8 (SOLO COMPROBANTES VÁLIDOS)
+    // =========================================================================
+    function exportValidVouchersCsv() {
+      const validRows = getScopedVouchers().filter(v => v.status === 'valid');
+      if (validRows.length === 0) {
+        notify('No hay comprobantes válidos en este filtro para exportar.', 'warning');
+        return;
+      }
+
+      const headers = [
+        'RUC_Empresa',
+        'Razon_Social',
+        'Actividad_Economica',
+        'Tipo_Operacion',
+        'Periodo',
+        'Fecha',
+        'Serie_Numero',
+        'RUC_Contraparte',
+        'Emisor_Cliente',
+        'Area',
+        'Rubro',
+        'Base_Imponible_PEN',
+        'IGV_18_PEN',
+        'Total_PEN',
+        'Estado_SUNAT'
+      ];
+
+      const lines = validRows.map(v => {
+        const igv = (v.total - v.base).toFixed(2);
+        return [
+          state.ruc,
+          `"${state.razonSocial.replace(/"/g, '""')}"`,
+          `"${state.sectorLabel.replace(/"/g, '""')}"`,
+          v.type,
+          v.period,
+          v.date,
+          v.serie,
+          v.ruc,
+          `"${v.emisor.replace(/"/g, '""')}"`,
+          `"${v.area.replace(/"/g, '""')}"`,
+          `"${v.rubro.replace(/"/g, '""')}"`,
+          v.base.toFixed(2),
+          igv,
+          v.total.toFixed(2),
+          'VALIDO'
+        ].join(',');
+      });
+
+      const csvText = '\uFEFF' + [headers.join(','), ...lines].join('\n');
+      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+      const objectUrl = URL.createObjectURL(blob);
+
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = `CONTAPP_PERU_${state.selectedPeriod.replace(/\s+/g, '_')}.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+
+      notify(`CSV descargado con ${validRows.length} comprobante(s) válido(s).`, 'success');
+    }
+
+    // =========================================================================
+    // INICIALIZACIÓN
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      populateSelectOptions();
+      applyValidatorPreset('valido', false);
+      renderWorkspace();
+      openProfileModal();
+    });
+  </script>
+</body>
+</html>
